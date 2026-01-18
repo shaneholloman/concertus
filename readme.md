@@ -1,88 +1,95 @@
-# Concertus - v0.2.0
-
-Concertus is a lightweight, plug and play, TUI music player written in Rust.
-
-![concertus.png](./docs/header.png)
+<h1 style="text-align: center;"> NoctaVox [v0.2.1]
 
 [![Built With Ratatui](https://ratatui.rs/built-with-ratatui/badge.svg)](https://ratatui.rs/)
-## Usage
+</h1>
 
-To try Concertus, do the following:
+
+NoctaVox is a lightweight, plug and play, TUI music player for local music.
+
+![noctavox.gif](./docs/header.gif)
+
+## Features
+
+- Gapless playback with queue support
+- Multi-format audio (mp3, m4a, wav, flac, ogg, opus)
+- Live library reloading
+- Custom themeing with hot reload
+- Vim-like keybindings
+- Waveform and oscilloscope visualiztion
+- Playlist management
+
+## Installation
 
 ```bash
-git clone https://github.com/Jaxx497/concertus/
-cd concertus
+git clone https://github.com/Jaxx497/noctavox/
+cd noctavox
+
+# Run directly (use stable for best audio experience)
 cargo run --release 
 
-# to intall globally:
-cargo install --path .
+# Or install globally
+cargo install --path noctavox_core
+noctavox
 ```
 
-Begin by assigning one or more root directories when promted. The root
-management window can be accessed by pressing the ``` ` ``` key at any time.
-Concertus will walk through the supplied folder(s), and create a virtual
-library based on any valid files it finds.
+## Quick Start
 
-It's recommended that users have ffmpeg installed for waveform visualization.
-This dependency however is not mandatory.
 
-Concertus aims to create an experience where no task is more than a keystroke
-or two away. Those familiar with vim-like bindings should pick up the
-keybindings quickly. Use `hjkl`/`d`/`u` for navigation, `n`/`p` for seeking, and `/`
-for searching. 
+On first launch, you'll be prompted to set root directories for your music library. Access this menu anytime with `` ` ``.
 
-For the full list of keymaps, refer to the [keymaps
-documentation](./docs/keymaps.md). \
-For information on custom themeing, refer to the [themeing
-specification](./docs/themes.md).
+**Navigation:** `hjkl` or arrow keys  
+**Playback:** `Space` to pause, `Enter` to play  
+**Seeking:** `n` +5 secs, `p` -5 secs  
+**Search:** `/`  
+**Reload:** `F5` or `Ctrl+u`  
 
-Currently, concertus supports the following filetypes: ```mp3, m4a, flac, ogg, wav```
+See [keymaps documentation](./docs/keymaps.md) for the complete list.
 
-## Disclaimers
+## Themeing
 
-Concertus never writes to user files and does not have any online capabilities.
-The program does however rely on accurate tagging. It's strongly recommended
-that users ensure their libraries are properly tagged with a tool like
-[MP3Tag](https://www.mp3tag.de/en/). 
+NoctaVox supports custom themes. The most recent specification for the
+themeing engine can be found by refering to the [themeing
+specification](./docs/themes.md). Themes can be live reloaded during
+runtime with `F6`. 
 
-> **Tip:** Concertus supports hot reloading by pressing `Ctrl+u` or `F5` at any
+## Notes
+
+Supported formats: `mp3`, `m4a`, `wav`, `flac`, `ogg`, `opus`.  
+Container formats are not currently supported.
+
+FFmpeg is an optional dependency which enables the waveform visualization functionality.
+
+NoctaVox never writes to user files and does not have any online capabilities.
+The program does however rely on accurate tagging, but does not supply any
+method for doing so. It's strongly recommended that users ensure their
+libraries are properly tagged with a tool like
+[MP3Tag](https://www.mp3tag.de/en/) or a similar alternative. 
+
+> **Tip:** NoctaVox supports hot reloading by pressing `Ctrl+u` or `F5` at any
 > point during runtime.
 
-## Known bugs
+## Voxio Backend 
 
-1. Symphonia/Rodio Related*
-    1. There are no reliable rust based OPUS decoders.
-    1. Seeking can be potentially unstable.
-    1. Gapless playback is not viable.
+For NoctaVox to recognize its true potential, a custom backend was
+written- Voxio. It's extremely simple audio playback engine designed to
+play audio at the highest quality, while also supporting the OPUS filetype
+and gapless playback; features that have proven hard to come by in more
+well known projects. This backend is being actively developed to avoid
+increase user satisfaction and reduce decoding faults
 
-> **Note:** This project is heavily reliant on the Symphonia and Rodio crates.
-Many of the playback related issues are due to upstream issues in the
-aforementioned libraries. 
+## Roadmap 
 
-## Current Development Objective
-Replace rodio with a custom rust-based backend (cpal & symphonia). This should
-achieve the following: 
-
-1. Reduce the overall dependency count & binary size
-1. Allow for truly gapless playback
-1. Optimize playback for concertus
-1. Use more up-to-date cpal/symphonia code
-
-Following the successful implementation of a custom backend, I will experiement
-with a 3rd party backend, likely utilizing libmpv.
-
-## TODO 
-
-- Implement a secondary backend (likely mpv) [Finally, OPUS support!!!]
-- Improved testing for various formats
-- Display more song info in window (user controlled)
-- Import/Export playlists
+- Additional user config options (framerate, backend selection)
+- Enhanced info display
+- Expanded format testing
+- Playlist import/export functionality
 
 ## Other
 
-Concertus is a hobby project primary written for educational purposes. This
+NoctaVox is a hobby project primary written for educational purposes. This
 project seeks to demonstrate my understanding of a series of programming
 fundamentals, including but not limited to multi-threading, atomics, string
 interning, database integration, de/serialization, memory management, integrity
 hashing, session persistence, OS operations, modular design, view models, 
 state management, user customization, and much more. 
+

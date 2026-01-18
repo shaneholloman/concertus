@@ -1,4 +1,4 @@
-Because Concertus is a modal program, keymaps depend on the specific context in
+Because Noctavox is a modal program, keymaps depend on the specific context in
 which they are used. Contexts are defined by a combination of the mode (e.g.
 Playlist, Queue, Album, Search) and the Pane (e.g. Main pane, sidebar, popup,
 etc.). Global keymaps and playback keymaps will work in almost every context,

@@ -1,0 +1,181 @@
+use super::{DisplayState, search_state::SearchState};
+
+use crate::{
+    Library, OSCILLO_BUFFER_CAPACITY, PlaybackSession,
+    database::DbWorker,
+    key_handler::InputContext,
+    library::SimpleSong,
+    player::{PlaybackMetrics, PlaybackState},
+    ui_state::{
+        LibraryView, Mode, Pane, PlaylistAction, ProgressDisplay, SettingsMode, ThemeManager,
+        UiState, WaveformManager,
+        popup::{PopupState, PopupType},
+    },
+};
+use anyhow::{Error, Result};
+use std::{collections::VecDeque, sync::Arc, time::Duration};
+
+impl UiState {
+    pub fn new(library: Arc<Library>, metrics: Arc<PlaybackMetrics>) -> Self {
+        UiState {
+            library,
+            db_worker: DbWorker::new()
+                .expect("Could not establish connection to database for UiState!"),
+            search: SearchState::new(),
+            display_state: DisplayState::new(),
+            metrics,
+            playback: PlaybackSession::init(),
+
+            waveform: WaveformManager::new(),
+            oscillo: VecDeque::with_capacity(OSCILLO_BUFFER_CAPACITY),
+            progress_display: ProgressDisplay::Oscilloscope,
+
+            popup: PopupState::new(),
+            theme_manager: ThemeManager::new(),
+            albums: Vec::new(),
+            legal_songs: Vec::new(),
+            playlists: Vec::new(),
+
+            library_refresh_progress: None,
+            library_refresh_detail: None,
+        }
+    }
+}
+
+impl UiState {
+    pub fn sync_library(&mut self, library: Arc<Library>) -> Result<()> {
+        self.library = library;
+
+        self.sort_albums();
+        match self.albums.is_empty() {
+            true => self.display_state.album_pos.select(None),
+            false => {
+                let album_len = self.albums.len();
+                let current_selection = self.display_state.album_pos.selected().unwrap_or(0);
+
+                if current_selection > album_len {
+                    self.display_state.album_pos.select(Some(album_len - 1));
+                } else if self.display_state.album_pos.selected().is_none() {
+                    self.display_state.album_pos.select(Some(0));
+                };
+            }
+        }
+
+        self.get_playlists()?;
+        self.set_legal_songs();
+
+        Ok(())
+    }
+
+    pub fn set_error(&mut self, e: Error) {
+        self.show_popup(PopupType::Error(e.to_string()));
+    }
+
+    pub fn soft_reset(&mut self) {
+        if self.popup.is_open() {
+            self.close_popup();
+        }
+
+        if self.get_mode() == Mode::Search {
+            self.set_mode(Mode::Library(LibraryView::Albums));
+        }
+
+        self.clear_multi_select();
+        self.search.input.select_all();
+        self.search.input.cut();
+        self.set_legal_songs();
+    }
+
+    pub fn get_error(&self) -> Option<&str> {
+        match &self.popup.current {
+            PopupType::Error(e) => Some(e.as_str()),
+            _ => None,
+        }
+    }
+
+    pub fn get_input_context(&self) -> InputContext {
+        if self.popup.is_open() {
+            return InputContext::Popup(self.popup.current.clone());
+        }
+
+        match (self.get_mode(), self.get_pane()) {
+            (Mode::Fullscreen, _) => InputContext::Fullscreen,
+            (Mode::Library(LibraryView::Albums), Pane::SideBar) => InputContext::AlbumView,
+            (Mode::Library(LibraryView::Playlists), Pane::SideBar) => InputContext::PlaylistView,
+            (Mode::Search, Pane::Search) => InputContext::Search,
+            (mode, Pane::TrackList) => InputContext::TrackList(mode.clone()),
+            (Mode::QUIT, _) => unreachable!(),
+            _ => InputContext::TrackList(self.get_mode().clone()),
+        }
+    }
+
+    pub fn is_text_input_active(&self) -> bool {
+        matches!(
+            (self.get_pane(), &self.popup.current),
+            (Pane::Search, _)
+                | (Pane::Popup, PopupType::Settings(SettingsMode::AddRoot))
+                | (Pane::Popup, PopupType::Playlist(PlaylistAction::Create))
+                | (
+                    Pane::Popup,
+                    PopupType::Playlist(PlaylistAction::CreateWithSongs)
+                )
+                | (Pane::Popup, PopupType::Playlist(PlaylistAction::Rename))
+        )
+    }
+}
+
+impl UiState {
+    pub fn set_library_refresh_progress(&mut self, progress: Option<u8>) {
+        self.library_refresh_progress = progress;
+    }
+
+    pub fn get_library_refresh_progress(&self) -> Option<u8> {
+        self.library_refresh_progress
+    }
+
+    pub fn set_library_refresh_detail(&mut self, detail: Option<String>) {
+        self.library_refresh_detail = detail;
+    }
+
+    pub fn get_library_refresh_detail(&self) -> Option<&str> {
+        self.library_refresh_detail.as_deref()
+    }
+
+    pub fn is_library_refreshing(&self) -> bool {
+        self.library_refresh_progress.is_some()
+    }
+}
+
+impl UiState {
+    pub fn peek_queue(&self) -> Option<&Arc<SimpleSong>> {
+        self.playback.peek_queue()
+    }
+
+    pub fn queue_is_empty(&self) -> bool {
+        self.playback.queue_is_empty()
+    }
+
+    pub(crate) fn is_paused(&self) -> bool {
+        self.metrics.is_paused()
+    }
+
+    pub fn set_now_playing(&mut self, song: Option<Arc<SimpleSong>>) {
+        self.playback.set_now_playing(song);
+    }
+
+    pub fn get_now_playing(&self) -> Option<&Arc<SimpleSong>> {
+        self.playback.get_now_playing()
+    }
+
+    pub fn get_playback_elapsed(&self) -> Duration {
+        self.metrics.get_elapsed()
+    }
+
+    pub fn get_playback_elapsed_f32(&self) -> f32 {
+        self.metrics.get_elapsed().as_secs_f32()
+    }
+
+    pub fn player_is_active(&self) -> bool {
+        self.metrics.get_state() != PlaybackState::Stopped && self.get_now_playing().is_some()
+    }
+}

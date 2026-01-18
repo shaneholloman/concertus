@@ -1,0 +1,91 @@
+use crate::{library::SongInfo, tui::widgets::WAVEFORM_WIDGET_HEIGHT, ui_state::UiState};
+use ratatui::{
+    style::{Color, Stylize},
+    widgets::{
+        Block, Padding, StatefulWidget, Widget,
+        canvas::{Canvas, Context, Line, Rectangle},
+    },
+};
+
+pub struct Waveform;
+impl StatefulWidget for Waveform {
+    type State = UiState;
+
+    fn render(
+        self,
+        area: ratatui::prelude::Rect,
+        buf: &mut ratatui::prelude::Buffer,
+        state: &mut Self::State,
+    ) {
+        let theme = state.theme_manager.get_display_theme(true);
+
+        let padding_vertical = match area.height {
+            0..=6 => 0,
+            7..=20 => (area.height as f32 * 0.15) as u16 - 1,
+            21..=40 => (area.height as f32 * 0.25) as u16,
+            _ => (area.height as f32 * 0.35) as u16,
+        };
+
+        if let Some(np) = state.get_now_playing() {
+            let waveform = state.get_waveform_as_slice();
+            let wf_len = waveform.len();
+            let duration_f32 = &np.get_duration_f32();
+
+            Canvas::default()
+                .x_bounds([0.0, wf_len as f64])
+                .y_bounds([WAVEFORM_WIDGET_HEIGHT * -1.0, WAVEFORM_WIDGET_HEIGHT])
+                .marker(theme.waveform_style)
+                .paint(|ctx| {
+                    let elapsed = state.get_playback_elapsed_f32();
+                    let progress = elapsed / duration_f32;
+
+                    for (idx, amp) in waveform.iter().enumerate() {
+                        let hgt = (*amp as f64 * WAVEFORM_WIDGET_HEIGHT).round();
+                        let position = idx as f32 / wf_len as f32;
+
+                        let color = match position < progress {
+                            true => theme.get_focused_color(position, elapsed),
+                            false => theme.get_inactive_color(position, elapsed, *amp),
+                        };
+
+                        match area.width < 170 {
+                            true => draw_waveform_line(ctx, idx as f64, hgt, color),
+                            false => draw_waveform_rect(ctx, idx as f64, hgt, color),
+                        }
+                    }
+                })
+                .background_color(theme.bg_global)
+                .block(Block::new().bg(theme.bg_global).padding(Padding {
+                    left: 10,
+                    right: 10,
+                    top: padding_vertical + 1,
+                    bottom: padding_vertical,
+                }))
+                .render(area, buf)
+        }
+    }
+}
+
+/// Lines create a more detailed and cleaner look
+/// especially when seen in smaller windows
+fn draw_waveform_line(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
+    ctx.draw(&Line {
+        x1: idx,
+        x2: idx,
+        y1: hgt,
+        y2: hgt * -1.0,
+        color,
+    })
+}
+
+/// Rectangles cleanly extend the waveform when in
+/// full-screen view
+fn draw_waveform_rect(ctx: &mut Context, idx: f64, hgt: f64, color: Color) {
+    ctx.draw(&Rectangle {
+        x: idx,
+        y: hgt * -1.0,
+        width: 0.5,        // This makes the waveform cleaner on resize
+        height: hgt * 2.0, // Rectangles are drawn from the bottom
+        color,
+    });
+}
