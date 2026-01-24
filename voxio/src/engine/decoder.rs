@@ -224,6 +224,14 @@ impl VoxDecoder {
         }
     }
 
+    /// Returns the playable duration in seconds, excluding encoder delay and padding.
+    /// Returns None if total_samples is unknown.
+    pub fn playable_duration(&self) -> Option<f64> {
+        let total = self.total_samples?;
+        let playable_frames = total.saturating_sub(self.delay_samples + self.padding_samples);
+        Some(playable_frames as f64 / self.info.sample_rate as f64)
+    }
+
     pub fn seek(&mut self, secs: f64) -> Result<u64> {
         let time = Time {
             seconds: secs as u64,

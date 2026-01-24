@@ -19,9 +19,9 @@ selection_inactive  = "#e989a9"
 accent              = "#3E3D32"
 accent_inactive     = ""
 
-progress            = ["#d45a8a", "#e989a9"]
-progress_i          = "dimmed"
-progress_speed      = 1 
+elapsed             = ["#d45a8a", "#e989a9"]
+unplayed            = "dimmed"
+speed      = 1 
 
 [borders]
 border_display      = "all"

@@ -21,7 +21,6 @@ impl PlaybackMetrics {
             state: AtomicU8::new(0),
             elapsed_ms: AtomicU64::new(0),
             audio_tap: ArrayQueue::new(2048),
-            // audio_tap: Mutex::new(VecDeque::with_capacity(2048)),
         })
     }
 

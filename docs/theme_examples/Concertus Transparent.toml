@@ -24,7 +24,7 @@ elapsed             = [ "#444446",
                         "#ff4646", 
                         "#FFFFFF" ]
 
-progress_i          = "dimmed"
+unplayed            = "dimmed"
 speed               = 2
 
 [borders]

@@ -61,7 +61,7 @@ impl DisplayTheme {
         let brightness = match &self.progress_played {
             ProgressGradient::Static(_) => 0.4,
             ProgressGradient::Gradient(g) if g.len() == 1 => 0.4,
-            _ => 0.08 + (amp * 0.4),
+            _ => 0.12 + (amp * 0.4),
         };
 
         match &self.progress_unplayed {

@@ -7,6 +7,7 @@ pub struct SharedState {
     track_ended: AtomicBool,
     seek_pending: AtomicBool,
     seek_generation: AtomicU64,
+    duration_micros: AtomicU64,
 }
 
 impl Default for SharedState {
@@ -18,6 +19,7 @@ impl Default for SharedState {
             track_ended: AtomicBool::new(false),
             seek_pending: AtomicBool::new(false),
             seek_generation: AtomicU64::new(0),
+            duration_micros: AtomicU64::new(0),
         }
     }
 }
@@ -52,6 +54,11 @@ impl SharedState {
     /// Get the current seek generation counter
     pub(crate) fn seek_generation(&self) -> u64 {
         self.seek_generation.load(Ordering::Acquire)
+    }
+
+    /// Returns the playable duration in seconds
+    pub(crate) fn get_duration_secs(&self) -> f64 {
+        self.duration_micros.load(Ordering::Acquire) as f64 / 1_000_000.0
     }
 
     // ======================
@@ -95,6 +102,12 @@ impl SharedState {
     /// Clear all samples
     pub(crate) fn reset_samples(&self) {
         self.samples_played.store(0, Ordering::Release);
+    }
+
+    /// Set the playable duration in seconds
+    pub(crate) fn set_duration_secs(&self, secs: f64) {
+        let micros = (secs * 1_000_000.0) as u64;
+        self.duration_micros.store(micros, Ordering::Release);
     }
 
     pub(crate) fn signal_track_ended(&self) {

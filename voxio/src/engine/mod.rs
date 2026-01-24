@@ -61,6 +61,7 @@ impl Vox {
         let state_clone = Arc::clone(&state);
         let mut last_seek_gen = state_clone.seek_generation();
         let mut was_seeking = false;
+        let mut was_inactive = true;
         let fade_total_samples = (output_rate as usize * output_channels * SEEK_FADE_MS) / 1000;
         let mut fade_samples_remaining: usize = 0;
 
@@ -78,12 +79,21 @@ impl Vox {
                     }
 
                     let is_seeking = state_clone.is_seeking();
+                    let is_inactive = state_clone.is_paused() || !state_clone.is_active() || is_seeking;
 
                     // Output silence if paused, not active, or seeking
-                    if state_clone.is_paused() || !state_clone.is_active() || is_seeking {
+                    if is_inactive {
                         data.fill(0.0);
                         was_seeking = is_seeking;
+                        was_inactive = true;
                         return;
+                    }
+
+                    // Drain buffer when transitioning from inactive to active playback
+                    // This catches cases where generation check missed the drain window
+                    if was_inactive {
+                        while consumer.pop().is_ok() {}
+                        was_inactive = false;
                     }
 
                     // Start fade-in if we just finished seeking
@@ -249,6 +259,12 @@ impl Vox {
     /// Retrieve position of playback
     pub fn position(&self) -> Duration {
         Duration::from_secs_f64(self.state.get_samples() as f64 / self.sps)
+    }
+
+    /// Retrieve the playable duration of the current track.
+    /// This excludes encoder delay and padding samples for accurate progress tracking.
+    pub fn duration(&self) -> Duration {
+        Duration::from_secs_f64(self.state.get_duration_secs())
     }
 
     /// Retrieves the latest *amount* of requested samples

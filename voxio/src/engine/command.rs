@@ -286,6 +286,18 @@ impl VoxWorker {
             Ok(decoder) => {
                 let info = &decoder.info;
 
+                // Store playable duration (excluding encoder delay/padding)
+                if let Some(duration) = decoder.playable_duration() {
+                    self.state.set_duration_secs(duration);
+                } else {
+                    // Fallback to n_frames-based duration if available
+                    let fallback = info
+                        .n_frames
+                        .map(|n| n as f64 / info.sample_rate as f64)
+                        .unwrap_or(0.0);
+                    self.state.set_duration_secs(fallback);
+                }
+
                 self.input_channels = info.channels;
                 self.resampler =
                     VoxResampler::new(info.sample_rate, self.output_rate, info.channels)?;
