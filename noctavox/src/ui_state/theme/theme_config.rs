@@ -196,7 +196,7 @@ impl Default for ThemeConfig {
                 DARK_GRAY,
             ])),
             progress_unplayed: InactiveGradient::Dimmed,
-            progress_speed: 6.0,
+            progress_speed: 0.6,
 
             bar_active: "━".to_string(),
             bar_inactive: "─".to_string(),

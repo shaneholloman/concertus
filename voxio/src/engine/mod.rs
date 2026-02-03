@@ -111,7 +111,7 @@ impl Vox {
 
                     tap_input.push(data);
                 },
-                |err| eprintln!("Stream error: {}", err),
+                |_e| {},
                 None,
             )
             .expect("Failed to create stream");
