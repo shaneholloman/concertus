@@ -1,3 +1,5 @@
+# Keymaps and Controls
+
 Because Noctavox is a modal program, keymaps depend on the specific context in
 which they are used. Contexts are defined by a combination of the mode (e.g.
 Playlist, Queue, Album, Search) and the Pane (e.g. Main pane, sidebar, popup,
@@ -8,17 +10,17 @@ with the exception of searching as not to affect a user's search query.
 
 ## Global Keymaps
 
-##### Navigation
+#### Navigation
 | Action      | Keymap |
 | ----------- | ----------- |
-| Select / Confirm | `Enter`|
-| Scroll Up 1 Item     | `k` `↑` |
-| Scroll Down 1 Item     | `j` `↓` |
+| Select / Confirm* | `Enter`|
+| Scroll Up* | `k` `↑` |
+| Scroll Down* | `j` `↓` |
 | Scroll Down (5 / 25 Items) | `d` `D`|
 | Scroll Up (5 / 25 Items) | `u` `U`|
-| Go to Top / Bottom | `g` `G` |
+| Go to * / Top / Bottom | `g` `G` |
 
-##### Views
+#### Views
 | Action      | Keymap |
 | ----------- | ----------- |
 | Album View |  `1` \| `Ctrl` + `a`|
@@ -31,7 +33,7 @@ with the exception of searching as not to affect a user's search query.
 | Waveform View | `w` `W` |
 | ProgressBar View | `b` `B` |
 
-##### General
+#### General
 | Action      | Keymap |
 | ----------- | ----------- |
 | Search | `\`
@@ -75,18 +77,18 @@ are displayed.
 > **Add to Playlist Shortcut:** Press `aa` on a song (or selection) to add it to the
 > most recently modified playlist, bypassing the popup. 
 
-##### Multi-Selection
+#### Multi-Selection
 
 | Action      | Keymap |
 | ----------- | ----------- |
-| Toggle Multi-Selection | `v` |
+| Toggle Multi-Selection* | `v` |
 | Toggle Multi-Selection on all Relevant Items | `V` |
 | Clear Multi-Selection | `Ctrl` + `v` |
 
 > **Multi-selection** enables users to select multiple songs to add, queue, or
 > remove from a playlist or the queue. Selection order is preserved.
 
-##### Playlist/Queue Specific
+#### Playlist/Queue Specific
 
 | Action      | Keymap |
 | ----------- | ----------- |
@@ -105,7 +107,7 @@ These keymaps apply when the album/playlist sidebar is focused.
 | Switch to Main Pane | `l` `→` <br> `Enter` |
 
 
-##### Playlist-View Specific
+#### Playlist-View Specific
 
 | Action      | Keymap |
 | ----------- | ----------- |
@@ -114,7 +116,7 @@ These keymaps apply when the album/playlist sidebar is focused.
 | Delete Playlist | `D` |
 
 
-##### Album-View Specific
+#### Album-View Specific
 
 | Action      | Keymap |
 | ----------- | ----------- |
@@ -123,3 +125,20 @@ These keymaps apply when the album/playlist sidebar is focused.
 > **Note:** Add an entire album or playlist to the queue by pressing `q`
 > directly from the sidebar pane. If nothing is playing, then the first element
 > of the selected entity will begin playing automatically.
+
+## Numeric Command Prefix
+A number of commands can be prefixed with a numeric value to enhance user
+control and precision. To use, simply type a value before certain commands. The
+numeric buffer holds the 3 last digits passed to it. The buffer will clear
+after any given command, but can also be manually cleared with either `Esc` or
+`Backspace`. Out of bounds entries will result in errors, with the exception of
+scrolling.
+
+Currently, the scroll, multi-select, and play functions support these prefixes.
+
+`11j` will scroll down 11 indices. \
+`23g` will move the cursor to the 23rd index on any tracklist. \
+`8v` will select the current and the next 8 items. (If all items are selected,
+they will be deselected instead). \
+`12<Enter>` will select and play the 12th track on a given tracklist (album,
+playlist, queue, or search results).

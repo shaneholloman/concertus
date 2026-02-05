@@ -16,7 +16,12 @@ impl NoctaVox {
         self.player.play(song)
     }
 
-    pub(crate) fn play_selected_song(&mut self) -> Result<()> {
+    pub(crate) fn play_selected_song(&mut self, count: usize) -> Result<()> {
+        match count {
+            0 => (),
+            x => self.ui.go_to_track(x)?,
+        }
+
         let song = self.ui.get_selected_song()?;
 
         if self.ui.get_mode() == &Mode::Queue {

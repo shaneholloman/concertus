@@ -1,9 +1,9 @@
 use crate::{
-    key_handler::*,
+    REFRESH_RATE,
+    key_handler::{key_buffer::KeyBuffer, *},
     ui_state::{
         LibraryView, Mode, Pane, PlaylistAction, PopupType, ProgressDisplay, SettingsMode, UiState,
     },
-    REFRESH_RATE,
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
@@ -11,15 +11,25 @@ use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent};
 use KeyCode::*;
 
 #[rustfmt::skip]
-pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> {
-    if let Some(action) = global_commands(&key_event, &state) {
+pub fn handle_key_event(key_event: KeyEvent, state: &mut UiState, buffer: &mut KeyBuffer) -> Option<Action> {
+
+    if let KeyCode::Char(c) = key_event.code {
+        if buffer.push_digit(c) {
+            state.set_buffer_count(buffer.get_count());
+            return None;
+        }
+    }
+
+    let buffer_count = buffer.take_count();
+
+    if let Some(action) = global_commands(&key_event, &state, buffer_count) {
         return Some(action);
     }
 
     match state.get_input_context() {
         InputContext::Popup(popup)  => handle_popup(&key_event, &popup),
         InputContext::Fullscreen    => handle_fullscreen(&key_event),
-        InputContext::TrackList(_)  => handle_tracklist(&key_event, &state),
+        InputContext::TrackList(_)  => handle_tracklist(&key_event, &state, buffer_count),
         InputContext::AlbumView     => handle_album_browser(&key_event),
         InputContext::PlaylistView  => handle_playlist_browswer(&key_event),
         InputContext::Search        => handle_search_pane(&key_event, &state),
@@ -28,10 +38,14 @@ pub fn handle_key_event(key_event: KeyEvent, state: &UiState) -> Option<Action> 
     }
 }
 
-fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
+fn global_commands(key: &KeyEvent, state: &UiState, mut buf_count: usize) -> Option<Action> {
     let in_search = state.get_pane() == Pane::Search;
     let fullscreen = matches!(state.get_mode(), Mode::Fullscreen);
     let popup_active = state.popup.is_open();
+
+    if buf_count == 0 {
+        buf_count = 1
+    }
 
     // Works on every pane, even search
     match (key.modifiers, key.code) {
@@ -48,6 +62,7 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
             // PLAYBACK COMMANDS
             (X, Esc) => Some(Action::SoftReset),
+            (X, Backspace) => Some(Action::ClearKeyBuffer),
 
             (S, Char('C')) => Some(Action::ThemeManager),
             (X, F(6)) => Some(Action::ThemeRefresh),
@@ -69,19 +84,18 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
             // NAVIGATION
             (X, Char('/')) => Some(Action::ChangeMode(Mode::Search)),
 
-            (X, Char('1')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
-            (X, Char('2')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
-            (X, Char('3')) => Some(Action::ChangeMode(Mode::Queue)),
-            (X, Char('0')) => Some(Action::ChangeMode(Mode::Power)),
+            (A, Char('1')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
+            (A, Char('2')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Playlists))),
+            (A, Char('3')) => Some(Action::ChangeMode(Mode::Queue)),
+            (A, Char('0')) => Some(Action::ChangeMode(Mode::Power)),
 
             // SCROLLING
-            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(1))),
-            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(1))),
+            (X, Char('j')) | (X, Down) => Some(Action::Scroll(Director::Down(buf_count))),
+            (X, Char('k')) | (X, Up) => Some(Action::Scroll(Director::Up(buf_count))),
             (X, Char('d')) => Some(Action::Scroll(Director::Down(SCROLL_MID))),
             (X, Char('u')) => Some(Action::Scroll(Director::Up(SCROLL_MID))),
             (S, Char('D')) => Some(Action::Scroll(Director::Down(SCROLL_XTRA))),
             (S, Char('U')) => Some(Action::Scroll(Director::Up(SCROLL_XTRA))),
-            (X, Char('g')) => Some(Action::Scroll(Director::Top)),
             (S, Char('G')) => Some(Action::Scroll(Director::Bottom)),
 
             (X, Char('[')) => Some(Action::IncrementSidebarSize(-SIDEBAR_INCREMENT)),
@@ -108,15 +122,21 @@ fn global_commands(key: &KeyEvent, state: &UiState) -> Option<Action> {
     }
 }
 
-fn handle_tracklist(key: &KeyEvent, state: &UiState) -> Option<Action> {
+fn handle_tracklist(key: &KeyEvent, state: &UiState, mut buf_count: usize) -> Option<Action> {
     let base_action = match (key.modifiers, key.code) {
-        (X, Enter) => Some(Action::Play),
+        (X, Enter) => Some(Action::Play(buf_count)),
 
         (X, Char('a')) => Some(Action::AddToPlaylist),
         (C, Char('a')) => Some(Action::GoToAlbum),
         (X, Char('q')) => Some(Action::QueueSong),
-        (X, Char('v')) => Some(Action::MultiSelect),
+        (X, Char('v')) => Some(Action::MultiSelect(buf_count)),
         (C, Char('v')) => Some(Action::ClearMultiSelect),
+        (X, Char('g')) => {
+            if buf_count == 0 {
+                buf_count = 1
+            }
+            Some(Action::GoToTrack(buf_count))
+        }
 
         (X, Left) | (X, Char('h') | Tab) => Some(Action::ChangeMode(Mode::Library(
             state.display_state.sidebar_view,
@@ -179,6 +199,7 @@ fn handle_album_browser(key: &KeyEvent) -> Option<Action> {
         }),
 
         // Change album sorting algorithm
+        (X, Char('g')) => Some(Action::Scroll(Director::Top)),
         (C, Left) | (C, Char('h')) => Some(Action::ToggleAlbumSort(false)),
         (C, Right) | (C, Char('l')) => Some(Action::ToggleAlbumSort(true)),
 
@@ -199,6 +220,7 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
             Some(Action::ChangePane(Pane::TrackList))
         }
 
+        (X, Char('g')) => Some(Action::Scroll(Director::Top)),
         (X, Char('c')) => Some(Action::CreatePlaylist),
         (C, Char('d')) => Some(Action::DeletePlaylist),
         (X, Char('s')) => Some(Action::QueueMany {

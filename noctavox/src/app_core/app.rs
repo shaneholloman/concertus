@@ -1,6 +1,7 @@
 use crate::{
     Library,
     app_core::{NoctaVox, key_loop},
+    key_handler::KeyBuffer,
     overwrite_line,
     player::PlayerHandle,
     tui,
@@ -26,6 +27,7 @@ impl NoctaVox {
             player,
             ui: UiState::new(lib_clone, metrics),
             library_refresh_rec: None,
+            key_buffer: KeyBuffer::new(),
         }
     }
 

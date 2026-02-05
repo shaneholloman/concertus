@@ -53,8 +53,10 @@ impl StatefulWidget for BufferLine {
             .areas(area);
 
         let selection_count = state.get_multi_select_indices().len();
+        let buffer = state.get_buffer_count();
 
         get_multi_selection(selection_count, &theme).render(left, buf);
+        get_buffer_count(buffer, &theme).render(left, buf);
         playing_title(state, &theme, center.width as usize).render(center, buf);
         queue_display(state, &theme, right.width as usize).render(right, buf);
     }
@@ -137,11 +139,25 @@ fn get_multi_selection(size: usize, theme: &DisplayTheme) -> Option<Line<'static
     Some(output)
 }
 
+fn get_buffer_count(size: Option<usize>, theme: &DisplayTheme) -> Option<Line<'static>> {
+    if let Some(x) = size {
+        if x == 0 {
+            return None;
+        }
+
+        return Some(
+            format!("{x:>3}")
+                .fg(theme.text_muted)
+                .into_left_aligned_line(),
+        );
+    }
+    None
+}
+
 const BAD_WIDTH: usize = 22;
 fn queue_display(state: &UiState, theme: &DisplayTheme, width: usize) -> Option<Line<'static>> {
     let up_next_str = state.peek_queue()?.get_title();
 
-    // [width - 5] should produce enough room to avoid overlapping with other displays
     let truncated = truncate_at_last_space(up_next_str, width - 5);
 
     let up_next_line = Span::from(truncated).fg(state.theme_manager.active.selection_inactive);

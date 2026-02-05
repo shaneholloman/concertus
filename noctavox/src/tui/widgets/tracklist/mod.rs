@@ -38,6 +38,7 @@ pub(super) fn get_widths(mode: &Mode) -> Vec<Constraint> {
     match mode {
         Mode::Power | Mode::Search => {
             vec![
+                Constraint::Length(3),
                 Constraint::Length(1),
                 Constraint::Ratio(3, 9),
                 Constraint::Ratio(2, 9),
@@ -175,16 +176,17 @@ impl CellFactory {
     pub fn get_track_discs(
         theme: &DisplayTheme,
         song: &Arc<SimpleSong>,
+        idx: usize,
         ms: bool,
     ) -> Cell<'static> {
-        let track_no = Span::from(match song.track_no {
-            Some(t) => format!("{t:>2}"),
-            None => format!("{x:>2}", x = ""),
-        })
-        .fg(match ms {
-            true => theme.text_selected,
-            false => theme.accent,
+        let mut track_no = Span::from(match song.track_no {
+            Some(t) => format!("{t:>2}").fg(theme.accent),
+            None => format!("{:>2}", idx + 1).fg(theme.text_muted),
         });
+
+        if ms {
+            track_no = track_no.fg(theme.text_selected)
+        };
 
         let disc_no = Span::from(match song.disc_no {
             Some(t) => String::from("ᴰ") + SUPERSCRIPT.get(&t).unwrap_or(&"?"),

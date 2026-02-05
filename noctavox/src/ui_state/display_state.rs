@@ -12,7 +12,7 @@ use std::sync::Arc;
 pub struct DisplayState {
     mode: Mode,
     mode_cached: Option<Mode>,
-    pub pane: Pane,
+    pane: Pane,
 
     table_sort: TableSort,
     pub(super) album_sort: AlbumSort,
@@ -25,6 +25,7 @@ pub struct DisplayState {
     pub table_pos: TableState,
     table_pos_cached: usize,
 
+    key_buffer: Option<usize>,
     pub multi_select: IndexSet<usize>,
 }
 
@@ -46,6 +47,7 @@ impl DisplayState {
             table_pos: TableState::default().with_selected(0),
             table_pos_cached: 0,
 
+            key_buffer: None,
             multi_select: IndexSet::default(),
         }
     }
@@ -83,10 +85,10 @@ impl UiState {
 
         match mode {
             Mode::Power => {
-                self.set_legal_songs();
-                self.display_state.mode = Mode::Power;
                 self.display_state.pane = Pane::TrackList;
+                self.display_state.mode = Mode::Power;
                 self.display_state.table_sort = TableSort::Title;
+                self.set_legal_songs();
                 self.display_state
                     .table_pos
                     .select(Some(self.display_state.table_pos_cached));
@@ -268,6 +270,17 @@ impl UiState {
                     .expect("Error sorting by duration.")
             }),
         };
+    }
+
+    pub(crate) fn go_to_track(&mut self, count: usize) -> Result<()> {
+        let range = self.legal_songs.len();
+        if (count > range) || (count < 1) {
+            bail!("OUT OF RANGE")
+        }
+
+        self.display_state.table_pos.select(Some(count - 1));
+
+        Ok(())
     }
 
     pub(crate) fn go_to_album(&mut self) -> Result<()> {
@@ -494,5 +507,17 @@ impl UiState {
                 }
             }
         }
+    }
+
+    pub fn set_buffer_count(&mut self, count: Option<usize>) {
+        self.display_state.key_buffer = count
+    }
+
+    pub fn get_buffer_count(&self) -> Option<usize> {
+        self.display_state.key_buffer
+    }
+
+    pub fn clear_key_buffer(&mut self) {
+        self.display_state.key_buffer = None
     }
 }

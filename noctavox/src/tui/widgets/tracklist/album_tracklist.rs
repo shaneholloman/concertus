@@ -40,7 +40,7 @@ impl StatefulWidget for AlbumView {
             .map(|(idx, song)| {
                 let is_m_selected = state.get_multi_select_indices().contains(&idx);
 
-                let track_no = CellFactory::get_track_discs(theme, song, is_m_selected);
+                let track_no = CellFactory::get_track_discs(theme, song, idx, is_m_selected);
                 let icon = CellFactory::status_cell(song, state, is_m_selected);
                 let title = CellFactory::title_cell(theme, song.get_title(), is_m_selected);
                 let artist = CellFactory::artist_cell(theme, song, is_m_selected);

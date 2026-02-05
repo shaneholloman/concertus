@@ -35,7 +35,9 @@ impl StatefulWidget for StandardTable {
         let inactive = fade_color(theme.dark, theme.text_primary, 0.6);
         let rows = songs
             .iter()
-            .map(|song| {
+            .enumerate()
+            .map(|(idx, song)| {
+                let idx = Cell::from((idx + 1).to_string()).fg(inactive);
                 let symbol = CellFactory::status_cell(song, state, true);
                 let mut title_col = Cell::from(song.get_title()).fg(inactive);
                 let mut artist_col = Cell::from(song.get_artist()).fg(inactive);
@@ -51,7 +53,7 @@ impl StatefulWidget for StandardTable {
                     }
                 }
 
-                Row::new([symbol, title_col, artist_col, album_col, dur_col])
+                Row::new([idx, symbol, title_col, artist_col, album_col, dur_col])
             })
             .collect::<Vec<Row>>();
 

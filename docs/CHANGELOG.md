@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## Version 0.2.2
+Licensing added
+
+Voxio is now available on crates.io \
+Voxio should not report active until verifying a single valid packet \
+Voxio no longer prints to screen when errors occur in the main callback
+
+Numeric command prefixing has been implemented for scrolling, multi-selection,
+and playback. Review the instructions in [the keymaps
+documentation](./keymaps.md) for more information.
+
+**`1`, `2`, `3` no longer map to Album/Playlist/Queue views respectively** \
+These maps have been replaced with `Alt`+`1`, `Alt`+`2`, `Alt`+`3` \
+Consider using the standard `Ctrl`+`A`, `Ctrl`+`T`, `Ctrl`+`Q` maps instead
+
+
+Minor visual bugs have been resolved, including extreme strobing from progress
+widgets
+
 ## Version 0.2.1
 Voxio is now the default backend.
 

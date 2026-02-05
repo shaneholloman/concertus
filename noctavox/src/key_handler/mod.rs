@@ -1,4 +1,5 @@
 mod action;
+mod key_buffer;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -8,6 +9,7 @@ use std::time::Instant;
 
 pub use action::handle_key_event;
 pub use action::next_event;
+pub use key_buffer::KeyBuffer;
 use ratatui::crossterm::event::KeyEvent;
 use ratatui::crossterm::event::KeyModifiers;
 
@@ -19,6 +21,7 @@ use crate::ui_state::ProgressDisplay;
 static ILLEGAL_CHARS: LazyLock<HashSet<char>> = LazyLock::new(|| HashSet::from([';']));
 
 const X: KeyModifiers = KeyModifiers::NONE;
+const A: KeyModifiers = KeyModifiers::ALT;
 const S: KeyModifiers = KeyModifiers::SHIFT;
 const C: KeyModifiers = KeyModifiers::CONTROL;
 
@@ -31,7 +34,7 @@ const SIDEBAR_INCREMENT: isize = 1;
 #[derive(PartialEq, Eq)]
 pub enum Action {
     // Player Controls
-    Play,
+    Play(usize),
     Stop,
     TogglePlayback,
     PlayNext,
@@ -62,12 +65,14 @@ pub enum Action {
     ToggleAlbumSort(bool),
     ChangeMode(Mode),
     ChangePane(Pane),
+    GoToTrack(usize),
     GoToAlbum,
     Scroll(Director),
 
-    MultiSelect,
+    MultiSelect(usize),
     MultiSelectAll,
     ClearMultiSelect,
+    ClearKeyBuffer,
 
     // Playlists
     CreatePlaylist,

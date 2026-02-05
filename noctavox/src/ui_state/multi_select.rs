@@ -12,14 +12,29 @@ impl UiState {
         &self.display_state.multi_select
     }
 
-    pub fn toggle_multi_selection(&mut self) -> Result<()> {
+    pub fn toggle_multi_selection(&mut self, count: usize) -> Result<()> {
         let song_idx = self.get_selected_idx()?;
 
-        match self.display_state.multi_select.contains(&song_idx) {
-            true => self.display_state.multi_select.swap_remove(&song_idx),
-            false => self.display_state.multi_select.insert(song_idx),
-        };
+        if count == 0 {
+            match self.display_state.multi_select.contains(&song_idx) {
+                true => self.display_state.multi_select.swap_remove(&song_idx),
+                false => self.display_state.multi_select.insert(song_idx),
+            };
+        } else {
+            let end = (song_idx + count).min(self.legal_songs.len());
 
+            let all_selected =
+                (song_idx..=end).all(|x| self.display_state.multi_select.contains(&x));
+
+            for i in song_idx..=end {
+                if all_selected {
+                    self.display_state.multi_select.swap_remove(&i);
+                } else {
+                    self.display_state.multi_select.insert(i);
+                }
+            }
+            self.display_state.table_pos.select(Some(end));
+        };
         Ok(())
     }
 

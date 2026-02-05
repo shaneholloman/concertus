@@ -8,7 +8,7 @@ impl NoctaVox {
     pub fn handle_action(&mut self, action: Action) -> Result<()> {
         match action {
             // Player 
-            Action::Play            => self.play_selected_song()?,
+            Action::Play(c)         => self.play_selected_song(c)?,
             Action::TogglePlayback  => self.player.toggle_playback()?,
             Action::Stop            => self.stop()?,
             Action::SeekForward(s)  => self.player.seek_forward(s)?,
@@ -18,6 +18,7 @@ impl NoctaVox {
 
             // UI 
             Action::Scroll(s)       => self.ui.scroll(s),
+            Action::GoToTrack(c)    => self.ui.go_to_track(c)?,
             Action::GoToAlbum       => self.ui.go_to_album()?,
             Action::ChangeMode(m)   => self.ui.set_mode(m),
             Action::ChangePane(p)   => self.ui.set_pane(p),
@@ -51,9 +52,10 @@ impl NoctaVox {
 
             Action::ShuffleElements => self.shuffle_queue(),
 
-            Action::MultiSelect      => self.ui.toggle_multi_selection()?,
+            Action::MultiSelect(x)   => self.ui.toggle_multi_selection(x)?,
             Action::MultiSelectAll   => self.ui.multi_select_all()?,
             Action::ClearMultiSelect => self.ui.clear_multi_select(),
+            Action::ClearKeyBuffer   => self.key_buffer.clear(),
 
             Action::ShiftPosition(direction) => self.shift_position(direction)?,
             Action::IncrementWFSmoothness(direction) => self.ui.increment_wf_smoothness(direction),
@@ -83,6 +85,8 @@ impl NoctaVox {
 
             _ => (),
         }
+        self.key_buffer.clear();
+        self.ui.clear_key_buffer();
         Ok(())
     }
 }

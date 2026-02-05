@@ -30,8 +30,13 @@ impl NoctaVox {
 
             recv(key_rx) -> key => {
                 if let Ok(key) = key {
-                    if let Some(action) = key_handler::handle_key_event(key, &self.ui) {
-                        let _ = self.handle_action(action);
+                    if let Some(action) = key_handler::handle_key_event(key, &mut self.ui, &mut self.key_buffer) {
+                        // let _ = self.handle_action(action);
+
+
+                        if let Err(e) = self.handle_action(action) {
+                            self.ui.set_error(e);
+                            }
                         }
                     }
                 }
