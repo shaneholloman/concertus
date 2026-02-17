@@ -2,8 +2,8 @@ use super::{Pane, UiState, new_textarea};
 use crate::library::{SimpleSong, SongInfo};
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use ratatui::crossterm::event::KeyEvent;
+use ratatui_textarea::TextArea;
 use std::{collections::HashMap, sync::Arc};
-use tui_textarea::TextArea;
 
 const MATCH_THRESHOLD: i64 = 80;
 const MATCH_LIMIT: usize = 250;

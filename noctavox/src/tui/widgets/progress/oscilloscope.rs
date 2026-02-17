@@ -20,7 +20,7 @@ impl StatefulWidget for Oscilloscope {
     ) {
         let theme = state.theme_manager.get_display_theme(true);
         let elapsed = state.get_playback_elapsed_f32();
-        let samples = state.oscillo.make_contiguous();
+        let samples = state.sample_tap.make_contiguous();
 
         if samples.is_empty() {
             return;

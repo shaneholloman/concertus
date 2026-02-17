@@ -38,7 +38,7 @@ pub struct UiState {
     library: Arc<Library>,
     db_worker: DbWorker,
 
-    metrics: Arc<PlaybackMetrics>,
+    pub(crate) metrics: Arc<PlaybackMetrics>,
     pub(crate) playback: PlaybackSession,
 
     search: SearchState,
@@ -46,10 +46,10 @@ pub struct UiState {
     pub(crate) theme_manager: ThemeManager,
     pub(crate) display_state: DisplayState,
 
+    pub(crate) sample_tap: VecDeque<f32>,
     waveform: WaveformManager,
-    pub(crate) oscillo: VecDeque<f32>,
-    stats: VoxStats,
     progress_display: ProgressDisplay,
+    stats: VoxStats,
 
     legal_songs: Vec<Arc<SimpleSong>>,
     pub(crate) albums: Vec<Album>,
@@ -61,8 +61,8 @@ pub struct UiState {
 
 pub use theme::*;
 
-fn new_textarea(placeholder: &str) -> tui_textarea::TextArea<'static> {
-    let mut search = tui_textarea::TextArea::default();
+fn new_textarea(placeholder: &str) -> ratatui_textarea::TextArea<'static> {
+    let mut search = ratatui_textarea::TextArea::default();
     search.set_cursor_line_style(ratatui::style::Style::default());
     search.set_placeholder_text(format!(" {placeholder}: "));
 

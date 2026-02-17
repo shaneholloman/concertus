@@ -1,5 +1,6 @@
 use crate::player::PlaybackState;
 use crossbeam::queue::ArrayQueue;
+use std::sync::atomic::AtomicU32;
 use std::time::Duration;
 use std::{
     collections::VecDeque,
@@ -11,6 +12,7 @@ use std::{
 
 pub struct PlaybackMetrics {
     state: AtomicU8,
+    sample_rate: AtomicU32,
     elapsed_ms: AtomicU64,
     pub(crate) audio_tap: ArrayQueue<f32>,
 }
@@ -19,6 +21,7 @@ impl PlaybackMetrics {
     pub fn new() -> Arc<Self> {
         Arc::new(PlaybackMetrics {
             state: AtomicU8::new(0),
+            sample_rate: AtomicU32::new(0),
             elapsed_ms: AtomicU64::new(0),
             audio_tap: ArrayQueue::new(2048),
         })
@@ -50,6 +53,14 @@ impl PlaybackMetrics {
     pub fn set_elapsed(&self, d: Duration) {
         self.elapsed_ms
             .store(d.as_millis() as u64, Ordering::Relaxed)
+    }
+
+    pub fn set_sample_rate(&self, sample_rate: u32) {
+        self.sample_rate.store(sample_rate, Ordering::Relaxed);
+    }
+
+    pub fn sample_rate(&self) -> u32 {
+        self.sample_rate.load(Ordering::Relaxed)
     }
 
     pub fn reset(&self) {

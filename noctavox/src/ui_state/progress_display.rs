@@ -1,4 +1,4 @@
-use crate::{FFMPEG_AVAILABLE, OSCILLO_BUFFER_CAPACITY, player::PlaybackState, ui_state::UiState};
+use crate::{FFMPEG_AVAILABLE, TAP_BUFFER_CAP, player::PlaybackState, ui_state::UiState};
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub enum ProgressDisplay {
@@ -49,6 +49,6 @@ impl UiState {
 
     pub fn fill_oscillo(&mut self) {
         self.metrics
-            .drain_into(&mut self.oscillo, OSCILLO_BUFFER_CAPACITY);
+            .drain_into(&mut self.sample_tap, TAP_BUFFER_CAP);
     }
 }

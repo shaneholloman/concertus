@@ -1,5 +1,5 @@
 use ratatui::{crossterm::event::KeyEvent, widgets::ListState};
-use tui_textarea::TextArea;
+use ratatui_textarea::TextArea;
 
 use crate::{
     get_random_playlist_idea,

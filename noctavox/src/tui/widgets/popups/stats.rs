@@ -158,8 +158,8 @@ fn get_most_played(
         .saturating_sub(title_cutoff);
 
     let header = Line::from_iter([
-        Span::from(format!("{:>5}", "#")), // right-align to match the numbers
-        Span::from("   "),                 // same gap as between plays and title
+        Span::from(format!("{:>5}", "#")),
+        Span::from("   "),
         Span::from(format!("{:<title_cutoff$}", "Title")),
         Span::raw(" "),
         Span::from(format!("{:>remainder$}", "Artist  ",)),

@@ -30,6 +30,7 @@ pub struct Vox {
     state: Arc<SharedState>,
     commands: channel::Sender<VoxCommand>,
     sps: f64,
+    output_rate: u32,
     tap: TapReader,
     _stream: Stream,
     _decoder_thread: JoinHandle<()>,
@@ -144,6 +145,7 @@ impl Vox {
             state: state,
             commands: tx,
             sps: output_rate as f64 * output_channels as f64,
+            output_rate: output_rate as u32,
             _stream: stream,
             _decoder_thread: decoder_thread,
             tap: tap_reader,
@@ -269,6 +271,11 @@ impl Vox {
     /// Returns Vec<f32>
     pub fn get_latest_samples(&mut self, amount: usize) -> Vec<f32> {
         self.tap.get_latest(amount)
+    }
+
+    /// Returns the output sample rate of the audio device in Hz
+    pub fn sample_rate(&self) -> u32 {
+        self.output_rate
     }
 
     pub fn track_ended(&self) -> bool {

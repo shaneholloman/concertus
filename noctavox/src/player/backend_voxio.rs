@@ -1,4 +1,4 @@
-use crate::{OSCILLO_BUFFER_CAPACITY, player::PlayerBackend};
+use crate::{TAP_BUFFER_CAP, player::PlayerBackend};
 use anyhow::Result;
 use std::{path::Path, time::Duration};
 
@@ -39,9 +39,7 @@ impl PlayerBackend for VoxEngine {
     }
 
     fn seek_back(&mut self, secs: u64) -> Result<()> {
-        // let elapsed = self.engine.position();
-        // let new_time = elapsed.saturating_sub(Duration::from_secs(secs));
-        self.engine.seek_relative(0.0 - secs as f64)?;
+        self.engine.seek_relative(-(secs as f64))?;
         Ok(())
     }
 
@@ -71,6 +69,10 @@ impl PlayerBackend for VoxEngine {
     }
 
     fn drain_samples(&mut self) -> Vec<f32> {
-        self.engine.get_latest_samples(OSCILLO_BUFFER_CAPACITY)
+        self.engine.get_latest_samples(TAP_BUFFER_CAP)
+    }
+
+    fn sample_rate(&self) -> u32 {
+        self.engine.sample_rate()
     }
 }

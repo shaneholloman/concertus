@@ -44,6 +44,7 @@ impl PlayerCore {
     }
 
     fn run(&mut self) {
+        self.metrics.set_sample_rate(self.backend.sample_rate());
         loop {
             self.process_commands();
             self.check_track_end();

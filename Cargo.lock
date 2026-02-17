@@ -25,9 +25,9 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "alsa"
-version = "0.11.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "812947049edcd670a82cd5c73c3661d2e58468577ba8489de58e1a73c04cbd5d"
+checksum = "7c88dbbce13b232b26250e1e2e6ac18b6a891a646b8148285036ebce260ac5c3"
 dependencies = [
  "alsa-sys",
  "bitflags 2.10.0",
@@ -37,9 +37,9 @@ dependencies = [
 
 [[package]]
 name = "alsa-sys"
-version = "0.4.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad7569085a265dd3f607ebecce7458eaab2132a84393534c95b18dcbc3f31e04"
+checksum = "db8fee663d06c4e303404ef5f40488a53e062f89ba8bfed81f42325aafad1527"
 dependencies = [
  "libc",
  "pkg-config",
@@ -269,11 +269,11 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-rs"
-version = "0.14.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d15c3c3cee7c087938f7ad1c3098840b3ef1f1bdc7f6e496336c3b1e7a6f3914"
+checksum = "1aae284fbaf7d27aa0e292f7677dfbe26503b0d555026f702940805a630eac17"
 dependencies = [
- "bitflags 2.10.0",
+ "bitflags 1.3.2",
  "libc",
  "objc2-audio-toolbox",
  "objc2-core-audio",
@@ -283,8 +283,9 @@ dependencies = [
 
 [[package]]
 name = "cpal"
-version = "0.17.2"
-source = "git+https://github.com/RustAudio/cpal#5cceb49054b46a3a4f1c6a38785bf6fd95203031"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b1f9c7312f19fc2fa12fd7acaf38de54e8320ba10d1a02dcbe21038def51ccb"
 dependencies = [
  "alsa",
  "coreaudio-rs",
@@ -1135,11 +1136,11 @@ dependencies = [
  "nohash-hasher",
  "rand 0.9.2",
  "ratatui",
+ "ratatui-textarea",
  "rayon",
  "rusqlite",
  "serde",
  "toml",
- "tui-textarea",
  "unicode-normalization",
  "unicode-width",
  "voxio",
@@ -1704,6 +1705,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ratatui-textarea"
+version = "0.7.0"
+source = "git+https://github.com/dotdash/ratatui-textarea?rev=a31abb7b#a31abb7b0b999f4e35fed65b76f8d1cb41d6e85e"
+dependencies = [
+ "ratatui-core",
+ "ratatui-crossterm",
+ "ratatui-widgets",
+ "unicode-width",
+]
+
+[[package]]
 name = "ratatui-widgets"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2116,9 +2128,9 @@ dependencies = [
 
 [[package]]
 name = "symphonia-adapter-libopus"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37240891f87dadfd42e3ee562d4340fb7fa5e2f02f94be9b4fedba63e73b6e62"
+checksum = "5bb56e67fc0f362731bc7a2920562ebb5668281b202444a0d274ddd3b5af61e6"
 dependencies = [
  "log",
  "opusic-sys",
@@ -2527,16 +2539,6 @@ checksum = "1ad61aed86bc3faea4300c7aee358b4c6d0c8d6ccc36524c96e4c92ccf26e77e"
 dependencies = [
  "num-integer",
  "strength_reduce",
-]
-
-[[package]]
-name = "tui-textarea"
-version = "0.7.0"
-source = "git+https://github.com/rhysd/tui-textarea/?rev=a5086767ee0831e319aec9432aaef495d8f280c4#a5086767ee0831e319aec9432aaef495d8f280c4"
-dependencies = [
- "crossterm 0.28.1",
- "ratatui",
- "unicode-width",
 ]
 
 [[package]]

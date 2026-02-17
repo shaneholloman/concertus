@@ -28,4 +28,8 @@ pub(super) trait PlayerBackend: Send + 'static {
     fn drain_samples(&mut self) -> Vec<f32> {
         Vec::new()
     }
+
+    fn sample_rate(&self) -> u32 {
+        48000
+    }
 }

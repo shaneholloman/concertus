@@ -1,7 +1,7 @@
 use super::{DisplayState, search_state::SearchState};
 
 use crate::{
-    Library, OSCILLO_BUFFER_CAPACITY, PlaybackSession,
+    Library, PlaybackSession, TAP_BUFFER_CAP,
     database::DbWorker,
     key_handler::InputContext,
     library::SimpleSong,
@@ -28,7 +28,7 @@ impl UiState {
             playback: PlaybackSession::init(),
 
             waveform: WaveformManager::new(),
-            oscillo: VecDeque::with_capacity(OSCILLO_BUFFER_CAPACITY),
+            sample_tap: VecDeque::with_capacity(TAP_BUFFER_CAP),
             progress_display: ProgressDisplay::Oscilloscope,
             stats: VoxStats::default(),
 
