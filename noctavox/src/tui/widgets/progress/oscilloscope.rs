@@ -1,4 +1,7 @@
-use crate::ui_state::{DisplayTheme, UiState};
+use crate::{
+    tui::widgets::progress::OSCILLO_LIMITER,
+    ui_state::{DisplayTheme, UiState},
+};
 use ratatui::{
     style::Stylize,
     widgets::{
@@ -20,6 +23,9 @@ impl StatefulWidget for Oscilloscope {
         let theme = state.theme_manager.get_display_theme(true);
         let elapsed = state.get_playback_elapsed_f32();
         let samples = state.sample_tap.make_contiguous();
+
+        let n = OSCILLO_LIMITER.min(samples.len());
+        let samples = &samples[samples.len() - n..];
 
         if samples.is_empty() {
             return;
