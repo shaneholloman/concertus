@@ -198,4 +198,12 @@ impl UiState {
             LayoutStyle::Minimal => self.layout = LayoutStyle::Traditional,
         }
     }
+
+    pub fn insert_history_entry(&self, song_id: u64) {
+        self.db_worker.insert_song_to_history(song_id);
+    }
+
+    pub fn delete_last_history_entry(&self) {
+        self.db_worker.delete_history_latest();
+    }
 }

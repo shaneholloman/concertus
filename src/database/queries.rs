@@ -110,9 +110,14 @@ pub const LOAD_HISTORY: &str = "
 pub const INSERT_INTO_HISTORY: &str = "
     INSERT INTO history (song_id, timestamp) VALUES (?, ?)";
 
-pub const DELETE_FROM_HISTORY: &str = "
+pub const HISTORY_CLEANUP: &str = "
     DELETE FROM history WHERE id NOT IN 
-        (SELECT id FROM history ORDER BY timestamp DESC LIMIT 50)
+        (SELECT id FROM history ORDER BY timestamp DESC LIMIT ?)
+";
+
+pub const HISTORY_DELETE_LATEST: &str = "
+    DELETE FROM history WHERE id = 
+    (SELECT id FROM history ORDER BY timestamp LIMIT 1)
 ";
 
 pub const UPDATE_PLAY_COUNT: &str = "

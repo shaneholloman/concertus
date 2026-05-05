@@ -153,11 +153,11 @@ impl UiState {
                 self.display_state.pane = Pane::Search;
             }
             Mode::QUIT => {
-                let history_ids = self.playback.export_history();
+                // let history_ids = self.playback.export_history();
+
+                // let _ = self.db_worker.save_history_to_db(history_ids);
 
                 let _ = self.save_state();
-                let _ = self.db_worker.save_history_to_db(history_ids);
-
                 self.display_state.mode = Mode::QUIT;
             }
         }

@@ -1,5 +1,5 @@
 use crate::{
-    CONFIG_DIRECTORY, DATABASE_FILENAME, SongMap,
+    CONFIG_DIRECTORY, DATABASE_FILENAME, HISTORY_CAPACITY, SongMap,
     database::tables::CREATE_TABLES,
     library::{LongSong, SimpleSong, SongInfo},
     ui_state::LibraryStats,
@@ -12,7 +12,7 @@ use std::{
     fs::{self},
     path::PathBuf,
     sync::Arc,
-    time::{Duration, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH},
     u64,
 };
 
@@ -112,8 +112,8 @@ impl Database {
                 ])?;
             }
         }
-        tx.commit()?;
 
+        tx.commit()?;
         Ok(())
     }
 
@@ -337,27 +337,26 @@ impl Database {
     //   HISTORY
     // ============
 
-    pub fn save_history_to_db(&mut self, history: &[u64]) -> Result<()> {
+    pub fn insert_to_history(&mut self, song_id: u64) -> Result<()> {
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
+
         let tx = self.conn.transaction()?;
+
         {
-            // Create timestamp
-            let timestamp = std::time::SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("Could not create timestamp!")
-                .as_secs() as i64;
+            tx.execute(
+                INSERT_INTO_HISTORY,
+                params![song_id.to_le_bytes(), timestamp],
+            )?;
 
-            let mut stmt = tx.prepare(INSERT_INTO_HISTORY)?;
-
-            // Since all timestamps are generated as we go into this
-            // function, subtract index value from timestamp value to
-            // maintain prior ordering
-            for (idx, song_id) in history.iter().enumerate() {
-                stmt.execute(params![song_id.to_le_bytes(), timestamp - idx as i64])?;
-            }
-            tx.execute(DELETE_FROM_HISTORY, [])?;
+            tx.execute(HISTORY_CLEANUP, params![HISTORY_CAPACITY as u16])?;
         }
-        tx.commit()?;
 
+        tx.commit()?;
+        Ok(())
+    }
+
+    pub fn delete_recent_from_history(&mut self) -> Result<()> {
+        self.conn.execute(HISTORY_DELETE_LATEST, params![])?;
         Ok(())
     }
 

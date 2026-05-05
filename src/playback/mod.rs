@@ -1,8 +1,6 @@
 mod session;
 mod validated_song;
 
-pub const HISTORY_CAPACITY: usize = 50;
-
 pub use session::PlaybackSession;
 pub use validated_song::ValidatedSong;
 

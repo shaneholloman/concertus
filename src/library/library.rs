@@ -259,10 +259,6 @@ impl Library {
 }
 
 impl Library {
-    pub fn set_history_db(&mut self, history: &[u64]) -> Result<()> {
-        self.db.save_history_to_db(history)
-    }
-
     pub fn load_history(&mut self, songs: &SongMap) -> Result<VecDeque<Arc<SimpleSong>>> {
         self.db.import_history(songs)
     }

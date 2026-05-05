@@ -29,6 +29,12 @@ impl NoctaVox {
         }
 
         let validated = ValidatedSong::new(&song)?;
+
+        if let Some(current) = self.ui.playback.get_now_playing() {
+            self.ui.insert_history_entry(current.get_id());
+            self.ui.playback.push_history(&Arc::clone(&current));
+        }
+
         self.play_song(&validated)?;
         self.force_sync()?;
 
@@ -36,7 +42,7 @@ impl NoctaVox {
     }
 
     pub(crate) fn play_next(&mut self) -> Result<()> {
-        let (delta, next) = self.ui.playback.advance();
+        let (delta, next, current) = self.ui.playback.advance();
 
         match next {
             Some(song) => {
@@ -47,6 +53,10 @@ impl NoctaVox {
         }
         self.ui.set_legal_songs();
 
+        if let Some(np) = current {
+            self.ui.insert_history_entry(np.get_id());
+        }
+
         Ok(())
     }
 
@@ -56,6 +66,8 @@ impl NoctaVox {
             .playback
             .pop_previous()?
             .ok_or_else(|| anyhow!("End of history!"))?;
+
+        self.ui.delete_last_history_entry();
 
         self.play_song(&popped)?;
         self.sync_player(&delta);
@@ -135,7 +147,11 @@ impl NoctaVox {
                 Ok(())
             }
             PlayerEvent::PlaybackStopped => {
-                let (delta, next) = self.ui.playback.advance();
+                let (delta, next, current) = self.ui.playback.advance();
+
+                if let Some(np) = current {
+                    self.ui.insert_history_entry(np.get_id());
+                }
 
                 if let Some(song) = next {
                     self.play_song(&song)?;
@@ -150,9 +166,11 @@ impl NoctaVox {
                 if self.ui.get_mode() == Mode::Fullscreen {
                     self.ui.revert_fullscreen();
                 }
+
                 self.ui.playback.set_now_playing(None);
                 self.ui.clear_waveform();
                 self.ui.set_legal_songs();
+
                 Ok(())
             }
             PlayerEvent::Error(e) => {

@@ -1,7 +1,7 @@
 use crate::{
-    Database, SongMap,
+    Database, HISTORY_CAPACITY, SongMap,
     library::SimpleSong,
-    playback::{HISTORY_CAPACITY, QueueDelta, ValidatedSong},
+    playback::{QueueDelta, ValidatedSong},
 };
 use anyhow::Result;
 use rand::seq::SliceRandom;
@@ -52,14 +52,6 @@ impl PlaybackSession {
             .collect()
     }
 
-    pub fn export_history(&mut self) -> Vec<u64> {
-        self.history
-            .make_contiguous()
-            .iter()
-            .map(|s| s.id)
-            .collect()
-    }
-
     // =====================
     //    QUEUE METHODS
     // =====================
@@ -101,19 +93,26 @@ impl PlaybackSession {
     }
 
     /// Take now_playing, put to history.
-    pub fn advance(&mut self) -> (QueueDelta, Option<Arc<ValidatedSong>>) {
+    pub fn advance(
+        &mut self,
+    ) -> (
+        QueueDelta,
+        Option<Arc<ValidatedSong>>,
+        Option<Arc<SimpleSong>>,
+    ) {
         let prev = self.get_head();
 
-        if let Some(current) = self.now_playing.take() {
-            self.push_history(&current);
-        }
+        let pushed = self.now_playing.take().map(|c| {
+            self.push_history(&c);
+            c
+        });
 
         let next = self.queue.pop_front().map(|song| {
             self.remove_id_if_final(song.id());
             song
         });
 
-        (self.head_delta(prev), next)
+        (self.head_delta(prev), next, pushed)
     }
 
     pub fn remove_from_queue(&mut self, idx: usize) -> (QueueDelta, Option<Arc<ValidatedSong>>) {

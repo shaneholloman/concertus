@@ -1,7 +1,7 @@
 use crate::{
     app_core::NoctaVox,
     key_handler::{Director, Incrementor, SelectionType},
-    library::SimpleSong,
+    library::{SimpleSong, SongInfo},
     playback::{QueueDelta, ValidatedSong},
     player::NoctavoxTrack,
     ui_state::{LibraryView, Mode},
@@ -12,7 +12,11 @@ use std::sync::Arc;
 
 impl NoctaVox {
     pub fn advance_to_next_gapless(&mut self) -> Option<Arc<ValidatedSong>> {
-        let (delta, next) = self.ui.playback.advance();
+        let (delta, next, current) = self.ui.playback.advance();
+
+        if let Some(np) = current {
+            self.ui.insert_history_entry(np.get_id());
+        }
 
         if self.ui.get_mode() == Mode::Queue {
             self.ui.set_legal_songs();

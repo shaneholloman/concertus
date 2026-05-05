@@ -128,10 +128,6 @@ impl DbWorker {
         self.execute_sync(move |db| db.build_playlists())
     }
 
-    pub fn save_history(&self, history: Vec<u64>) -> Result<()> {
-        self.execute_sync(move |db| db.save_history_to_db(&history))
-    }
-
     pub fn save_ui_snapshot(&self, snapshot: UiSnapshot) -> Result<()> {
         self.execute_sync(move |db| db.save_ui_snapshot(snapshot))
     }
@@ -148,12 +144,20 @@ impl DbWorker {
         self.execute_sync(move |db| db.import_history(&song_map))
     }
 
-    pub fn save_history_to_db(&self, history: Vec<u64>) -> Result<()> {
-        self.execute_sync(move |db| db.save_history_to_db(&history))
-    }
-
     pub fn get_song_path(&self, id: u64) -> Result<String> {
         self.execute_sync(move |db| db.get_song_path(id))
+    }
+
+    pub fn insert_song_to_history(&self, song_id: u64) {
+        self.execute(move |db| {
+            let _ = db.insert_to_history(song_id);
+        });
+    }
+
+    pub fn delete_history_latest(&self) {
+        self.execute(move |db| {
+            let _ = db.delete_recent_from_history();
+        });
     }
 
     pub fn update_play_count(&self, song_id: u64) {

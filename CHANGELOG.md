@@ -3,6 +3,8 @@
 ## Current Development
 
 ### Fixed:
+ - Reworked database history tracking
+ - Fixed bug where songs conditionally wouldn't be added to history
  - Better error handling when Voxio backend fails to start
  - [minimal mode] no longer crashes when terminal height < 3 
  - Better pause/play logic, should enhance media control usability
