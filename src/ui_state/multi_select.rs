@@ -44,14 +44,15 @@ impl UiState {
     ) -> Result<Vec<Arc<SimpleSong>>> {
         let selection = match sel_type {
             SelectionType::Multi => self.get_multi_select_songs(),
-            SelectionType::Album => self
-                .get_selected_album()
-                .ok_or(anyhow!("Illegal album selection"))?
-                .get_tracklist(),
-            SelectionType::Playlist => self
-                .get_selected_playlist()
-                .ok_or(anyhow!("Illegal playlist selection"))?
-                .get_tracklist(),
+            SelectionType::Legal => self.get_legal_songs().to_vec(),
+            // SelectionType::Album => self
+            //     .get_selected_album()
+            //     .ok_or(anyhow!("Illegal album selection"))?
+            //     .get_tracklist(),
+            // SelectionType::Playlist => self
+            //     .get_selected_playlist()
+            //     .ok_or(anyhow!("Illegal playlist selection"))?
+            //     .get_tracklist(),
         };
 
         self.clear_multi_select();

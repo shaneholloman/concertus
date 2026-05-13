@@ -133,8 +133,7 @@ pub enum InputContext {
 #[derive(PartialEq, Eq)]
 pub enum SelectionType {
     Multi,
-    Album,
-    Playlist,
+    Legal,
 }
 
 #[derive(PartialEq, Eq)]

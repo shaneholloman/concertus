@@ -9,9 +9,11 @@
  - Remembers what was playing on last shutdown
 
 ### Fixed:
- - Reworked database history tracking
+ - `Q` binding restored in library view
+ - Keybinds are more consistent cross-platform
  - Reworked internal timing system
- - Fixed bug where songs conditionally wouldn't be added to history
+ - Reworked history tracking
+    - Fixed bug where songs conditionally wouldn't be added to history
  - Better error handling when Voxio backend fails to start
  - Better error handling when database is corrupt
  - [minimal mode] no longer crashes when terminal height < 3 

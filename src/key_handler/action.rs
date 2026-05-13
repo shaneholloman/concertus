@@ -53,12 +53,8 @@ fn global_commands(key: &KeyEvent, state: &UiState, mut buf_count: usize) -> Opt
     match (key.modifiers, key.code) {
         (C, Char('c')) => Some(Action::QUIT),
 
-        (C, Char(' ')) => Some(Action::TogglePlayback),
-
         (C, Char('n')) => Some(Action::PlayNext),
         (C, Char('p')) => Some(Action::PlayPrev),
-
-        (X, Media(event::MediaKeyCode::PlayPause)) => Some(Action::TogglePlayback),
 
         // Works on everything except search or popup
         _ if (!in_search && !popup_active && !fullscreen) => match (key.modifiers, key.code) {
@@ -113,13 +109,13 @@ fn global_commands(key: &KeyEvent, state: &UiState, mut buf_count: usize) -> Opt
             (_, Char('<')) => Some(Action::CycleTheme(Incrementor::Up)),
             (_, Char('>')) => Some(Action::CycleTheme(Incrementor::Down)),
 
-            (_, Char('f') | Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
+            (X, Char('f')) | (S, Char('F')) => Some(Action::ChangeMode(Mode::Fullscreen)),
 
             (X, Char('w')) => Some(Action::NextProgressDisplay),
-            (_, Char('W')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
-            (_, Char('O')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
-            (_, Char('S')) => Some(Action::SetProgressDisplay(ProgressDisplay::Spectrum)),
-            (_, Char('B')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
+            (S, Char('W')) => Some(Action::SetProgressDisplay(ProgressDisplay::Waveform)),
+            (S, Char('O')) => Some(Action::SetProgressDisplay(ProgressDisplay::Oscilloscope)),
+            (S, Char('S')) => Some(Action::SetProgressDisplay(ProgressDisplay::Spectrum)),
+            (S, Char('B')) => Some(Action::SetProgressDisplay(ProgressDisplay::ProgressBar)),
             (C, Char('u')) | (X, F(5)) => Some(Action::UpdateLibrary),
 
             _ => None,
@@ -159,14 +155,10 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState, mut buf_count: usize) -> Op
             (S, Char('K')) => Some(Action::ShiftPosition(Incrementor::Up)),
             (S, Char('J')) => Some(Action::ShiftPosition(Incrementor::Down)),
             (S, Char('Q')) => Some(Action::QueueMany {
-                sel_type: SelectionType::Multi,
+                sel_type: SelectionType::Legal,
                 shuffle: false,
             }),
             (S, Char('V')) => Some(Action::MultiSelectAll),
-            (X, Char('s')) => Some(Action::QueueMany {
-                sel_type: SelectionType::Multi,
-                shuffle: true,
-            }),
             (X, Char('x')) => Some(Action::RemoveSong),
             _ => None,
         },
@@ -193,14 +185,14 @@ fn handle_tracklist(key: &KeyEvent, state: &UiState, mut buf_count: usize) -> Op
 fn handle_album_browser(key: &KeyEvent) -> Option<Action> {
     match (key.modifiers, key.code) {
         (X, Char('q')) => Some(Action::QueueMany {
-            sel_type: SelectionType::Album,
+            sel_type: SelectionType::Legal,
             shuffle: false,
         }),
         (X, Enter) | (X, Tab) | (X, Right) | (X, Char('l')) | (C, Char('a')) => {
             Some(Action::ChangePane(Pane::TrackList))
         }
         (X, Char('s')) => Some(Action::QueueMany {
-            sel_type: SelectionType::Album,
+            sel_type: SelectionType::Legal,
             shuffle: true,
         }),
 
@@ -218,7 +210,7 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
         (C, Char('a')) => Some(Action::ChangeMode(Mode::Library(LibraryView::Albums))),
         (X, Char('r')) => Some(Action::RenamePlaylist),
         (X, Char('q')) => Some(Action::QueueMany {
-            sel_type: SelectionType::Playlist,
+            sel_type: SelectionType::Legal,
             shuffle: false,
         }),
 
@@ -230,7 +222,7 @@ fn handle_playlist_browswer(key: &KeyEvent) -> Option<Action> {
         (X, Char('c')) => Some(Action::CreatePlaylist),
         (C, Char('d')) => Some(Action::DeletePlaylist),
         (X, Char('s')) => Some(Action::QueueMany {
-            sel_type: SelectionType::Playlist,
+            sel_type: SelectionType::Legal,
             shuffle: true,
         }),
         _ => None,
