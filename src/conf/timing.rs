@@ -9,8 +9,8 @@ pub struct Timing {
 }
 
 impl Timing {
-    pub fn from_fps(fps: u8) -> Self {
-        let fps = fps.clamp(20, 240);
+    pub fn from_fps(fps: u16) -> Self {
+        let fps = fps.clamp(20, 360);
         Self {
             refresh_rate: frame_period(fps),
             media_tick: ticks_per(48, fps),
@@ -19,11 +19,11 @@ impl Timing {
     }
 }
 
-fn frame_period(fps: u8) -> Duration {
+fn frame_period(fps: u16) -> Duration {
     Duration::from_secs_f64(1.0 / fps as f64)
 }
 
-fn ticks_per(interval_ms: u32, fps: u8) -> u32 {
+fn ticks_per(interval_ms: u32, fps: u16) -> u32 {
     let frame_ms = 1000.0 / fps as f64;
     ((interval_ms as f64 / frame_ms).round() as u32).max(1) // never 0
 }

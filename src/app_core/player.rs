@@ -128,8 +128,11 @@ impl NoctaVox {
                 let song = self.library.get_song_by_id(return_id).cloned();
                 self.ui.set_now_playing(song);
 
+                let is_restore = self.restored_song_id.take() == Some(return_id);
                 if let Some(song) = self.library.get_song_by_id(return_id).cloned() {
-                    song.update_play_count()?;
+                    if !is_restore {
+                        song.update_play_count()?;
+                    }
                     self.ui.clear_waveform();
                     self.ui.request_waveform(&song);
 

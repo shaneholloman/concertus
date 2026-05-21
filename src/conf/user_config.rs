@@ -7,7 +7,7 @@ use crate::CONFIG_DIR;
 #[serde(default, deny_unknown_fields)]
 pub struct UserConfig {
     #[serde(default = "defaults::framerate")]
-    pub framerate: u8,
+    pub framerate: u16,
 
     #[serde(default = "defaults::auto_resume")]
     pub auto_resume: bool,
@@ -17,7 +17,7 @@ pub struct UserConfig {
 }
 
 mod defaults {
-    pub fn framerate() -> u8 {
+    pub fn framerate() -> u16 {
         60
     }
 

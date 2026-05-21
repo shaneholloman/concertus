@@ -78,7 +78,7 @@ or if a field is missing/invalid. To adjust the configurations, create a
 `config.toml` file inside of the `$CONFIG/noctavox/` directory.
 
 ```toml
-framerate = 120     # accepts values between 20 and 240 
+framerate = 120     # accepts values between 20 and 300 
                     # default: 60
 
 auto_resume = true  # if a track was playing when shutdown, resume playback on startup
@@ -146,10 +146,9 @@ https://github.com/Jaxx497/Voxio/
 
 ## Roadmap 
 
-- Enable container formats!
-- Additional user config options (framerate, backend selection??)
-- Expanded format testing
 - Playlist import/export functionality
+- ReWrite Voxio
+    - Enable container formats!
 
 ## Other
 

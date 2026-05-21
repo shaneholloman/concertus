@@ -1,4 +1,4 @@
-pub const CREATE_TABLES: &str = r"
+pub const CREATE_SCHEMA: &str = r"
     CREATE TABLE IF NOT EXISTS roots(
         id INTEGER PRIMARY KEY,
         path TEXT UNIQUE NOT NULL
@@ -87,4 +87,22 @@ pub const CREATE_TABLES: &str = r"
         started_at INTEGER NOT NULL,
         FOREIGN KEY(song_id) REFERENCES songs(id) ON DELETE CASCADE
     );
+
+    CREATE VIEW IF NOT EXISTS now_playing_v1 AS
+    SELECT
+      s.title           AS title,
+      ar.name           AS artist,
+      al.title          AS album,
+      s.track_no        AS track_no,
+      s.disc_no         AS disc_no,
+      s.year            AS year,
+      s.path            AS path,
+      s.duration        AS duration_secs,
+      np.position_secs  AS position_secs,
+      np.started_at     AS started_at
+    FROM now_playing np
+    JOIN songs   s  ON s.id       = np.song_id
+    LEFT JOIN artists ar ON ar.id = s.artist_id
+    LEFT JOIN albums  al ON al.id = s.album_id
+    WHERE np.id = 1;
 ";

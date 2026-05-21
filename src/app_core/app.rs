@@ -40,6 +40,7 @@ impl NoctaVox {
             key_buffer: KeyBuffer::new(),
             media_controls,
             tick_sync: 0,
+            restored_song_id: None,
         };
 
         if let Some(e) = config_err {
@@ -121,7 +122,10 @@ impl NoctaVox {
         if let Ok((song_id, elapsed_secs)) = self.ui.restore_last_played() {
             if let Some(song) = self.library.get_song_by_id(song_id) {
                 let song = NoctavoxTrack::try_from(song.as_ref())?;
+
+                self.restored_song_id = Some(song_id);
                 self.player.play(song)?;
+
                 self.player.seek_to(elapsed_secs)?;
 
                 if !user_config().auto_resume {

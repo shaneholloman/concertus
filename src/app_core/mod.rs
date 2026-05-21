@@ -22,6 +22,7 @@ pub struct NoctaVox {
     library_refresh_rec: Option<Receiver<LibraryRefreshProgress>>,
     media_controls: Option<MediaControlsHandle>,
     tick_sync: u32,
+    restored_song_id: Option<u64>,
 }
 
 pub enum LibraryRefreshProgress {

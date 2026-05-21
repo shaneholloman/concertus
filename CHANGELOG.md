@@ -3,10 +3,14 @@
 ## Current Development
 
 ### Added:
+ - Addon support!
+   - Playlist import/export
+   - Now playing db view
  - User Configurations!
-   - Control framerate [default: 60fps] `20 <= FR <= 240`
+   - Control framerate [default: 60fps] `20 <= FR <= 360`
    - Auto-resume where last song left off [default: off]
  - Remembers what was playing on last shutdown
+    - Do not auto-increment play_count
 
 ### Fixed:
  - `Q` binding restored in library view
@@ -18,6 +22,7 @@
  - Better error handling when database is corrupt
  - [minimal mode] no longer crashes when terminal height < 3 
  - [minimal mode] stats window matches theme bg
+ - [minimal mode] tracklist duration styling normalized 
  - Better pause/play logic, should enhance media control usability
 
 ### Other: 

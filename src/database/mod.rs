@@ -1,6 +1,6 @@
 use crate::{
     DB_PATH, HISTORY_CAPACITY, SongMap,
-    database::tables::CREATE_TABLES,
+    database::schema::CREATE_SCHEMA,
     library::{LongSong, SimpleSong, SongInfo},
     ui_state::LibraryStats,
 };
@@ -18,8 +18,8 @@ use std::{
 
 mod playlists;
 mod queries;
+mod schema;
 mod snapshot;
-mod tables;
 mod worker;
 
 pub(crate) const DB_BOUND: usize = 100;
@@ -73,7 +73,7 @@ impl Database {
 
     fn create_tables(&mut self) -> Result<()> {
         let tx = self.conn.transaction()?;
-        tx.execute_batch(&CREATE_TABLES)?;
+        tx.execute_batch(&CREATE_SCHEMA)?;
         tx.commit()?;
 
         Ok(())

@@ -3,6 +3,8 @@ use anyhow::Result;
 use indexmap::IndexMap;
 use rusqlite::params;
 
+type PlaylistMap = IndexMap<(i64, String), Vec<(i64, u64)>>;
+
 impl Database {
     pub fn create_playlist(&mut self, name: &str) -> Result<()> {
         self.conn.execute(CREATE_NEW_PLAYLIST, params![name])?;
@@ -100,10 +102,11 @@ impl Database {
         Ok(())
     }
 
-    pub fn build_playlists(&mut self) -> Result<IndexMap<(i64, String), Vec<(i64, u64)>>> {
+    /// Create a map of playlists and their songs
+    pub fn build_playlists(&mut self) -> Result<PlaylistMap> {
         let mut stmt = self.conn.prepare_cached(PLAYLIST_BUILDER)?;
 
-        let rows = stmt.query_map([], |r| {
+        let mut rows = stmt.query_map([], |r| {
             let ps_id: Option<i64> = r.get("id")?;
             let name: String = r.get("name")?;
             let playlist_id: i64 = r.get("playlist_id")?;
@@ -125,19 +128,14 @@ impl Database {
             Ok((playlist_id, song_id, ps_id, name))
         })?;
 
-        let mut playlist_map: IndexMap<(i64, String), Vec<(i64, u64)>> = IndexMap::new();
-
-        for row in rows {
+        let playlist_map: PlaylistMap = rows.try_fold(PlaylistMap::new(), |mut map, row| {
             let (playlist_id, song_id_opt, ps_id_opt, name) = row?;
-
-            let entry = playlist_map
-                .entry((playlist_id, name))
-                .or_insert_with(Vec::new);
-
+            let entry = map.entry((playlist_id, name)).or_insert_with(Vec::new);
             if let (Some(song_id), Some(ps_id)) = (song_id_opt, ps_id_opt) {
-                entry.push((ps_id, song_id))
+                entry.push((ps_id, song_id));
             }
-        }
+            Ok::<_, rusqlite::Error>(map)
+        })?;
 
         Ok(playlist_map)
     }

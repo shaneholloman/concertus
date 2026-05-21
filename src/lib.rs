@@ -19,6 +19,7 @@ use ui_state::UiState;
 use unicode_normalization::UnicodeNormalization;
 use xxhash_rust::xxh3::xxh3_64;
 
+pub mod addons;
 pub mod app_core;
 pub mod conf;
 pub mod database;
@@ -30,6 +31,7 @@ pub mod player;
 pub mod tui;
 pub mod ui_state;
 
+pub use addons::parse_args;
 pub use conf::UserConfig;
 pub use database::Database;
 pub use library::{Library, SimpleSong};
@@ -61,7 +63,10 @@ static CONFIG_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 pub static THEME_DIR: LazyLock<PathBuf> = LazyLock::new(|| CONFIG_DIR.join("themes"));
+pub static ADDON_DIR: LazyLock<PathBuf> = LazyLock::new(|| CONFIG_DIR.join("addons"));
 pub static DB_PATH: LazyLock<PathBuf> = LazyLock::new(|| CONFIG_DIR.join("noctavox.db"));
+
+pub const ADDON_TRANSPOSE: &str = "nv-transpose";
 
 pub const HISTORY_CAPACITY: usize = 64;
 pub const TAP_BUFFER_CAPACITY: usize = 2048;
