@@ -4,23 +4,19 @@ use crate::{
     normalize_metadata_str as nms,
 };
 use anyhow::{Result, anyhow, bail};
-// use lofty::{
-//     file::{AudioFile, TaggedFileExt},
-//     read_from_path,
-//     tag::{Accessor, ItemKey},
-// };
 use symphonia::{
     core::{
         formats::{TrackType, probe::Hint},
         io::MediaSourceStream,
         meta::StandardTag,
+        units::{Duration as SymphoniaDuration, TimeBase},
     },
     default::get_probe,
 };
 
 use std::{
     fs::File,
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, LazyLock},
     time::Duration,
 };
@@ -53,15 +49,14 @@ impl LongSong {
         }
     }
 
-    pub fn build_song_symphonia<P: AsRef<Path>>(path_raw: P) -> Result<LongSong> {
-        let path = path_raw.as_ref();
-        let src = File::open(path)?;
+    pub fn build_song_symphonia(path: PathBuf) -> Result<LongSong> {
+        let src = File::open(&path)?;
 
         let size = src.metadata()?.len();
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
         let mut hint = Hint::new();
 
-        let ext = match path.extension() {
+        let ext = match &path.extension() {
             Some(n) => FileType::from(
                 n.to_str()
                     .ok_or_else(|| anyhow!("Failed to obtain filetype from {}", path.display()))?,
@@ -73,19 +68,28 @@ impl LongSong {
 
         let mut probed = get_probe().probe(&hint, mss, Default::default(), Default::default())?;
 
-        let mut song_info = LongSong::new(PathBuf::from(path));
-        song_info.id = calculate_signature(path)?;
+        let fallback_title = path
+            .file_stem()
+            .map(|s| nms(&s.to_string_lossy()))
+            .ok_or_else(|| anyhow!("No song title!"))?;
+
+        let id = calculate_signature(&path)?;
+        let mut song_info = LongSong::new(path);
+        song_info.id = id;
 
         let track = probed
             .first_track_known_codec(TrackType::Audio)
             .ok_or_else(|| anyhow!("No audio tracks!"))?;
 
         let duration = match (track.time_base, track.duration) {
-            (Some(tb), Some(dur)) => {
-                let secs = dur.get() as f64 * tb.numer.get() as f64 / tb.denom.get() as f64;
-                Duration::from_secs_f64(secs)
+            (Some(tb), Some(dur)) => get_duration(dur, tb),
+            _ => {
+                let mediainfo = probed.media_info();
+                match (mediainfo.time_base, mediainfo.duration) {
+                    (Some(tb), Some(dur)) => get_duration(dur, tb),
+                    _ => Duration::ZERO,
+                }
             }
-            _ => Duration::ZERO,
         };
 
         let (channels, sample_rate) = track
@@ -112,8 +116,9 @@ impl LongSong {
 
         let mut release_year = None;
         let mut recording_year = None;
-        let mut release_date = None;
-        let mut recording_date = None;
+
+        let mut artist: Option<(u8, Arc<String>)> = None;
+        let mut alb_art: Option<(u8, Arc<String>)> = None;
 
         loop {
             if let Some(md) = metadata.current() {
@@ -121,21 +126,31 @@ impl LongSong {
                     if let Some(std_tag) = &tag.std {
                         match std_tag {
                             StandardTag::TrackTitle(t) => song_info.title = nms(t),
-                            StandardTag::Artist(a) => song_info.artist = Arc::new(nms(a)),
-                            // StandardTag::Performer(p) => song_info.artist = Arc::new(nms(p)),
+
+                            StandardTag::Artist(a) => artist = best(artist, 0, a),
+                            StandardTag::SortArtist(a) => artist = best(artist, 1, a),
+                            StandardTag::Composer(c) => artist = best(artist, 2, c),
+                            StandardTag::Performer(p) => artist = best(artist, 3, p),
+                            StandardTag::OriginalArtist(o) => artist = best(artist, 4, o),
+                            StandardTag::Author(a) => artist = best(artist, 5, a),
+
                             StandardTag::Album(a) => song_info.album = Arc::new(nms(a)),
-                            StandardTag::AlbumArtist(aa) => {
-                                if song_info.album_artist.is_empty() {
-                                    song_info.album_artist = Arc::new(nms(aa))
-                                }
-                            }
+
+                            StandardTag::AlbumArtist(aa) => alb_art = best(alb_art, 0, aa),
+                            StandardTag::SortAlbumArtist(s) => alb_art = best(alb_art, 1, s),
+
                             StandardTag::TrackNumber(t) => song_info.track_no = Some(*t as u32),
                             StandardTag::DiscNumber(d) => song_info.disc_no = Some(*d as u32),
 
                             StandardTag::ReleaseYear(y) => release_year = Some(*y as u32),
                             StandardTag::RecordingYear(y) => recording_year = Some(*y as u32),
-                            StandardTag::ReleaseDate(d) => release_date = Some(d.clone()),
-                            StandardTag::RecordingDate(d) => recording_date = Some(d.clone()),
+                            StandardTag::ReleaseDate(d) => {
+                                release_year = release_year.or_else(|| d.get(..4)?.parse().ok());
+                            }
+                            StandardTag::RecordingDate(d) => {
+                                recording_year =
+                                    recording_year.or_else(|| d.get(..4)?.parse().ok());
+                            }
                             _ => {}
                         }
                     }
@@ -148,96 +163,23 @@ impl LongSong {
         }
 
         if song_info.title.is_empty() {
-            song_info.title = path
-                .file_stem()
-                .map(|s| nms(&s.to_string_lossy()))
-                .ok_or_else(|| anyhow!("No song title!"))?
+            song_info.title = fallback_title
         }
 
-        song_info.year = release_year.or(recording_year).or_else(|| {
-            release_date
-                .or(recording_date)
-                .and_then(|d| d.get(..4)?.parse().ok())
-        });
+        song_info.year = release_year.or(recording_year);
 
-        if song_info.artist.is_empty() {
-            song_info.artist = NO_ARTIST.clone()
+        match artist {
+            Some((_, a)) => song_info.artist = Arc::new(nms(&a)),
+            None => song_info.artist = Arc::clone(&NO_ARTIST),
         }
 
-        if song_info.album_artist.is_empty() {
-            song_info.album_artist = Arc::clone(&song_info.artist)
+        match alb_art {
+            Some((_, a)) => song_info.album_artist = Arc::new(nms(&a)),
+            _ => song_info.album_artist = Arc::clone(&song_info.artist),
         }
 
         Ok(song_info)
     }
-
-    // pub fn build_song_lofty<P: AsRef<Path>>(path_raw: P) -> Result<LongSong> {
-    //     let path = path_raw.as_ref();
-    //     let mut song_info = LongSong::new(PathBuf::from(path));
-    //
-    //     song_info.id = calculate_signature(path)?;
-    //
-    //     song_info.filetype = match path.extension() {
-    //         Some(n) => FileType::from(
-    //             n.to_str()
-    //                 .ok_or_else(|| anyhow!("Failed to obtain filetype from {}", path.display()))?,
-    //         ),
-    //         None => bail!("Unsupported extension: {:?}", path.extension()),
-    //     };
-    //
-    //     let tagged_file = read_from_path(path)?;
-    //     let properties = tagged_file.properties();
-    //
-    //     song_info.duration = properties.duration();
-    //     song_info.channels = properties.channels();
-    //     song_info.sample_rate = properties.sample_rate();
-    //     song_info.bit_rate = properties.audio_bitrate();
-    //
-    //     song_info.title = tagged_file
-    //         .primary_tag()
-    //         .and_then(|tag| tag.title())
-    //         .map(|s| nms(&s))
-    //         .filter(|s| !s.is_empty())
-    //         .unwrap_or_else(|| {
-    //             path.file_stem()
-    //                 .map(|stem| stem.to_string_lossy().into_owned())
-    //                 .unwrap_or_default()
-    //         });
-    //
-    //     if let Some(tag) = tagged_file.primary_tag() {
-    //         song_info.album = Arc::new(tag.album().map(|s| nms(&s)).unwrap_or_default());
-    //
-    //         let artist = tag
-    //             .artist()
-    //             .map(|s| nms(&s))
-    //             .unwrap_or("[NO ARTIST!]".into());
-    //
-    //         let album_artist = tag
-    //             .get_string(ItemKey::AlbumArtist)
-    //             .map(|s| nms(&s))
-    //             .filter(|s| !s.is_empty())
-    //             .unwrap_or_else(|| artist.to_string());
-    //
-    //         song_info.artist = Arc::new(artist);
-    //         song_info.album_artist = Arc::new(album_artist);
-    //
-    //         song_info.year = tag.date().map(|ts| ts.year as u32).or_else(|| {
-    //             tag.get_string(ItemKey::Year)
-    //                 .and_then(|s| {
-    //                     nms(s)
-    //                         .split_once('-')
-    //                         .map(|(y, _)| y.to_string())
-    //                         .or_else(|| Some(s.to_string()))
-    //                 })
-    //                 .and_then(|s| s.parse::<u32>().ok())
-    //         });
-    //
-    //         song_info.track_no = tag.track();
-    //         song_info.disc_no = tag.disk();
-    //     }
-    //
-    //     Ok(song_info)
-    // }
 
     pub fn get_path(&self, db: &mut Database) -> Result<String> {
         db.get_song_path(self.id)
@@ -271,5 +213,17 @@ impl SongInfo for LongSong {
 
     fn get_duration_str(&self, style: DurationStyle) -> String {
         get_readable_duration(self.duration, style)
+    }
+}
+
+fn get_duration(dur: SymphoniaDuration, tb: TimeBase) -> Duration {
+    let secs = dur.get() as f64 * tb.numer.get() as f64 / tb.denom.get() as f64;
+    Duration::from_secs_f64(secs)
+}
+
+fn best<C: Clone>(current: Option<(u8, C)>, priority: u8, value: &C) -> Option<(u8, C)> {
+    match current {
+        Some((p, _)) if p < priority => current,
+        _ => Some((priority, value.clone())),
     }
 }

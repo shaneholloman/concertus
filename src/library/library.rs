@@ -186,7 +186,7 @@ impl Library {
     fn process_songs(paths: Vec<PathBuf>) -> Vec<LongSong> {
         paths
             .into_par_iter()
-            .filter_map(|path| LongSong::build_song_symphonia(&path).ok())
+            .filter_map(|path| LongSong::build_song_symphonia(path).ok())
             // .filter_map(|path| LongSong::build_song_lofty(&path).ok())
             .collect::<Vec<LongSong>>()
     }
@@ -411,7 +411,7 @@ impl Library {
             .into_par_iter()
             .filter_map(|path| {
                 // let result = LongSong::build_song_lofty(&path).ok();
-                let result = LongSong::build_song_symphonia(&path).ok();
+                let result = LongSong::build_song_symphonia(path).ok();
 
                 let count = processed.fetch_add(1, Ordering::Relaxed) + 1;
 
